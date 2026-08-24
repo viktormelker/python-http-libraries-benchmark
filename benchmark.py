@@ -7,7 +7,7 @@ import sys
 from platform import system
 from datetime import datetime
 from factory import PackageFactory
-from model import PACKAGES, csv_fieldnames
+from model import ASYNC_PACKAGES, PACKAGES, csv_fieldnames, migrate_results_csv
 
 CSV_FILE = "benchmark_results.csv"
 NUM_REQUESTS_PER_PACKAGE_RUN = 100
@@ -18,10 +18,9 @@ async def run_package(package_name):
     retries = 0
     while retries < MAX_RETRIES:
         try:
-            if package_name in ["aiohttp", "httpx", "httpx2"]:
+            if package_name in ASYNC_PACKAGES:
                 return await package.run_async()
-            else:
-                return package.run_sync()
+            return package.run_sync()
         except Exception as e:
             retries += 1
             print(f"Error while running {package_name} (attempt {retries}): {e}")
@@ -34,7 +33,8 @@ async def run_package(package_name):
 
 def run_benchmarks():
     packages = list(PACKAGES)
-    fieldnames = csv_fieldnames(packages)
+    fieldnames = csv_fieldnames()
+    migrate_results_csv(CSV_FILE)
 
     file_exists = os.path.isfile(CSV_FILE)
 

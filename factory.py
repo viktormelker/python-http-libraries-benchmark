@@ -46,6 +46,19 @@ class AiohttpPackage(Package):
         return BenchmarkResult(NUM_REQUESTS_PER_PACKAGE_RUN/duration, duration, sum(conn_times)/NUM_REQUESTS_PER_PACKAGE_RUN, avg_tls_time=None)
 
 class HttpxPackage(Package):
+    def run_sync(self):
+        conn_times = []
+
+        start_total = time.time()
+        with httpx.Client() as client:
+            for _ in range(NUM_REQUESTS_PER_PACKAGE_RUN):
+                start_conn = time.time()
+                client.get(TEST_URL)
+                conn_times.append(time.time() - start_conn)
+        duration = time.time() - start_total
+
+        return BenchmarkResult(NUM_REQUESTS_PER_PACKAGE_RUN/duration, duration, sum(conn_times)/NUM_REQUESTS_PER_PACKAGE_RUN, avg_tls_time=None)
+
     async def run_async(self):
         semaphore = asyncio.Semaphore(CONCURRENT_REQUESTS)
         conn_times = []
@@ -67,6 +80,19 @@ class HttpxPackage(Package):
 
 
 class Httpx2Package(Package):
+    def run_sync(self):
+        conn_times = []
+
+        start_total = time.time()
+        with httpx2.Client() as client:
+            for _ in range(NUM_REQUESTS_PER_PACKAGE_RUN):
+                start_conn = time.time()
+                client.get(TEST_URL)
+                conn_times.append(time.time() - start_conn)
+        duration = time.time() - start_total
+
+        return BenchmarkResult(NUM_REQUESTS_PER_PACKAGE_RUN/duration, duration, sum(conn_times)/NUM_REQUESTS_PER_PACKAGE_RUN, avg_tls_time=None)
+
     async def run_async(self):
         semaphore = asyncio.Semaphore(CONCURRENT_REQUESTS)
         conn_times = []
@@ -148,6 +174,23 @@ class NiquestsPackage(Package):
 
         return BenchmarkResult(NUM_REQUESTS_PER_PACKAGE_RUN/duration, duration, total_conn_time/NUM_REQUESTS_PER_PACKAGE_RUN, total_tls_time/NUM_REQUESTS_PER_PACKAGE_RUN)
 
+    async def run_async(self):
+        semaphore = asyncio.Semaphore(CONCURRENT_REQUESTS)
+        conn_times = []
+
+        async def fetch(session):
+            async with semaphore:
+                start_conn = time.time()
+                await session.get("/")
+                conn_times.append(time.time() - start_conn)
+
+        async with niquests.AsyncSession(base_url=TEST_URL, timeout=(2.0, 5.0)) as session:
+            start_total = time.time()
+            await asyncio.gather(*[fetch(session) for _ in range(NUM_REQUESTS_PER_PACKAGE_RUN)])
+            duration = time.time() - start_total
+
+        return BenchmarkResult(NUM_REQUESTS_PER_PACKAGE_RUN/duration, duration, sum(conn_times)/NUM_REQUESTS_PER_PACKAGE_RUN, avg_tls_time=None)
+
 class Urllib3Package(Package):
     def run_sync(self):
         http = urllib3.PoolManager()
@@ -169,11 +212,11 @@ class PackageFactory:
     def get_package(package_name):
         if package_name == "aiohttp":
             return AiohttpPackage()
-        elif package_name == "niquests":
+        elif package_name in ("niquests_async", "niquests_sync"):
             return NiquestsPackage()
-        elif package_name == "httpx":
+        elif package_name in ("httpx_async", "httpx_sync"):
             return HttpxPackage()
-        elif package_name == "httpx2":
+        elif package_name in ("httpx2_async", "httpx2_sync"):
             return Httpx2Package()
         elif package_name == "pycurl":
             return PycurlPackage()

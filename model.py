@@ -1,9 +1,28 @@
 import csv
 import os
 
-PACKAGES = ["aiohttp", "httpx", "httpx2", "niquests", "pycurl", "requests", "urllib3"]
+PACKAGES = [
+    "aiohttp",
+    "httpx_async",
+    "httpx_sync",
+    "httpx2_async",
+    "httpx2_sync",
+    "niquests_async",
+    "niquests_sync",
+    "pycurl",
+    "requests",
+    "urllib3",
+]
+ASYNC_PACKAGES = frozenset(
+    name for name in PACKAGES if name.endswith("_async") or name == "aiohttp"
+)
 METRICS = ["req_sec", "total", "conn_avg", "tls_avg"]
 CSV_METADATA = ["start_time", "end_time", "num_requests"]
+LEGACY_PACKAGE_RENAMES = {
+    "httpx": "httpx_async",
+    "httpx2": "httpx2_async",
+    "niquests": "niquests_sync",
+}
 
 
 class BenchmarkResult:
@@ -16,6 +35,17 @@ class BenchmarkResult:
 
 def csv_fieldnames():
     return CSV_METADATA + [f"{metric}_{pkg}" for metric in METRICS for pkg in PACKAGES]
+
+
+def remap_legacy_column(name):
+    for metric in METRICS:
+        prefix = f"{metric}_"
+        if name.startswith(prefix):
+            package = name[len(prefix):]
+            if package in LEGACY_PACKAGE_RENAMES:
+                return f"{prefix}{LEGACY_PACKAGE_RENAMES[package]}"
+            break
+    return name
 
 
 def read_result_records(path, fieldnames=None):
@@ -31,7 +61,7 @@ def read_result_records(path, fieldnames=None):
             record = dict(zip(fieldnames, row))
         else:
             record = dict(zip(header, row))
-        records.append(record)
+        records.append({remap_legacy_column(key): value for key, value in record.items()})
     return records
 
 

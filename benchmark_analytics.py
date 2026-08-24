@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from model import PACKAGES
+from model import PACKAGES, migrate_results_csv
 
 
 # Plot configuration
@@ -37,6 +37,8 @@ def plot_metric(df, metric_key, title, ylabel, filename):
 
 
 if __name__ == "__main__":
+    migrate_results_csv("benchmark_results.csv")
+
     # Load CSV
     df = pd.read_csv("benchmark_results.csv")
 
