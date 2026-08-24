@@ -7,6 +7,7 @@ import sys
 from platform import system
 from datetime import datetime
 from factory import PackageFactory
+from model import PACKAGES, csv_fieldnames
 
 CSV_FILE = "benchmark_results.csv"
 NUM_REQUESTS_PER_PACKAGE_RUN = 100
@@ -17,7 +18,7 @@ async def run_package(package_name):
     retries = 0
     while retries < MAX_RETRIES:
         try:
-            if package_name in ["aiohttp", "httpx"]:
+            if package_name in ["aiohttp", "httpx", "httpx2"]:
                 return await package.run_async()
             else:
                 return package.run_sync()
@@ -32,10 +33,8 @@ async def run_package(package_name):
 
 
 def run_benchmarks():
-    packages = ["aiohttp", "httpx", "pycurl", "requests", "urllib3"]
-    metrics = ["req_sec", "total", "conn_avg", "tls_avg"]
-
-    fieldnames = ["start_time", "end_time", "num_requests"] + [f"{metric}_{pkg}" for metric in metrics for pkg in packages]
+    packages = list(PACKAGES)
+    fieldnames = csv_fieldnames(packages)
 
     file_exists = os.path.isfile(CSV_FILE)
 
