@@ -5,10 +5,12 @@ This project benchmarks popular Python HTTP libraries to compare their performan
 ---
 
 ## 📦 HTTP Libraries Benchmarked
-This benchmark includes five widely-used Python HTTP libraries—requests, urllib3, httpx, aiohttp, and pycurl—chosen for their relevance, diversity, and real-world usage. requests is the most popular and beginner-friendly library, while urllib3 offers low-level control and powers requests internally. httpx and aiohttp provide modern asynchronous support for high-concurrency applications. Finally, pycurl wraps the high-performance C-based libcurl library, often used in system-level or legacy environments. Together, they represent a broad spectrum of HTTP client capabilities in Python, from ease of use to advanced performance tuning.
+This benchmark includes widely-used Python HTTP libraries chosen for their relevance, diversity, and real-world usage. `requests` is the most popular and beginner-friendly library, while `urllib3` offers low-level control and powers `requests` internally. `httpx`, `httpx2`, `niquests`, and `aiohttp` provide modern HTTP client APIs. `httpx`, `httpx2`, and `niquests` are measured in both sync and async modes (as `*_sync` and `*_async` series). Finally, `pycurl` wraps the high-performance C-based libcurl library.
 
 - [`aiohttp`](https://docs.aiohttp.org/)
-- [`httpx`](https://www.python-httpx.org/)
+- [`httpx`](https://www.python-httpx.org/) (sync and async)
+- [`httpx2`](https://httpx2.pydantic.dev/) (sync and async)
+- [`niquests`](https://niquests.readthedocs.io/en/latest/) (sync and async)
 - [`requests`](https://docs.python-requests.org/)
 - [`urllib3`](https://urllib3.readthedocs.io/)
 - [`pycurl`](http://pycurl.io/)
@@ -42,7 +44,7 @@ To ensure fair and unbiased comparisons:
 Benchmark results are stored in `benchmark_results.csv`. Each row represents one full benchmarking round and includes:
 
 - Start and end timestamps
-- Requests per second, total duration, and average connection time for each library
+- Requests per second, total duration, and average connection time for each library (httpx, httpx2, and niquests appear as both `_sync` and `_async` columns)
 - Number of requests executed
 
 ---
